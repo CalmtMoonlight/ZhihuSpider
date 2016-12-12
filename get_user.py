@@ -35,7 +35,6 @@ class GetUser(threading.Thread):
     xsrf = ''
     db = ''
     db_cursor = ''
-    counter = 0  # 记录多少用户被抓取
     max_queue_len = 1000  # redis带抓取用户队列最大长度
 
     def __init__(self, threadID=1, name=''):
@@ -69,8 +68,9 @@ class GetUser(threading.Thread):
             pass
 
         # 创建login对象
+        '''
         lo = Login(self.session)
-        lo.do_login()
+        lo.do_login()'''
 
         # 初始化redis连接
         try:
@@ -118,7 +118,7 @@ class GetUser(threading.Thread):
 
     # 获取单个用户详情页面
     def get_user_page(self, name_url):
-        user_page_url = 'https://www.zhihu.com' + str(name_url) + '/about'
+        user_page_url = 'https://www.zhihu.com' + str(name_url) + '/activities'
         try:
             index_html = self.session.get(user_page_url, headers=self.headers, timeout=35)
         except Exception as err:
@@ -300,12 +300,12 @@ class GetUser(threading.Thread):
         BS = BeautifulSoup(about_page, 'html.parser')
         # 获取页面的具体数据
         try:
-            nickname = BS.find("a", class_="name").get_text() if BS.find("a", class_="name") else ''
+            nickname = BS.find("span", class_="ProfileHeader-name").get_text() if BS.find("span", class_="ProfileHeader-name") else ''
             user_type = name_url[1:name_url.index('/', 1)]
             self_domain = name_url[name_url.index('/', 1) + 1:]
-            gender = 2 if BS.find("i", class_="icon icon-profile-female") else (1 if BS.find("i", class_="icon icon-profile-male") else 3)
-            follower_num = int(BS.find('span', text='关注者').find_parent().find('strong').get_text())
-            following_num = int(BS.find('span', text='关注了').find_parent().find('strong').get_text())
+            gender = 2 if BS.find("i", class_="Icon Icon--female") else (1 if BS.find("i", class_="Icon Icon--male") else 3)
+            following_num = int(BS.find('div', text="关注了",class_="Profile-followStatusKey").find_parent().find('div',class_="Profile-followStatusValue").get_text())
+            follower_num = int(BS.find('div', text="关注者",class_="Profile-followStatusKey").find_parent().find('div',class_="Profile-followStatusValue").get_text())
             agree_num = int(re.findall(r'<strong>(.*)</strong>.*赞同', about_page)[0])
             appreciate_num = int(re.findall(r'<strong>(.*)</strong>.*感谢', about_page)[0])
             star_num = int(re.findall(r'<strong>(.*)</strong>.*收藏', about_page)[0])
@@ -408,15 +408,22 @@ class GetUser(threading.Thread):
 
 
 if __name__ == '__main__':
+    '''
     login = GetUser(999, "登陆线程")
 
+    thread_num = 4
     threads = []
-    for i in range(0, 4):
+    for i in range(0, thread_num):
         m = GetUser(i, "thread" + str(i))
         threads.append(m)
 
-    for i in range(0, 4):
+    for i in range(0, thread_num):
         threads[i].start()
 
-    for i in range(0, 4):
+    for i in range(0, thread_num):
         threads[i].join()
+    '''
+    test = GetUser(1,"test thread")
+    user_page = test.get_user_info('/people/yan-ying-15')
+
+
